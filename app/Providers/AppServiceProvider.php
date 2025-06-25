@@ -19,7 +19,9 @@ final class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bind interfaces to implementations
+        $this->app->bind(\App\Contracts\AIClientInterface::class, \App\Services\AIClient::class);
+        $this->app->bind(\App\Contracts\MailerServiceInterface::class, \App\Services\MailerService::class);
     }
 
     /**
@@ -68,7 +70,7 @@ final class AppServiceProvider extends ServiceProvider
     private function configureUrls(): void
     {
         URL::forceHttps(
-            $this->app->isProduction(),
+            $this->app->environment('production'),
         );
     }
 

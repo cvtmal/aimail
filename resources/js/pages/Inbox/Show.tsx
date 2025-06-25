@@ -1,5 +1,5 @@
 import React, { useState, FormEvent } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { formatDate } from '@/lib/utils';
@@ -95,12 +95,13 @@ export default function Show({ email, latestReply, chatHistory = [], message, su
             <div className="p-6 text-gray-900 dark:text-gray-100">
               <div className="flex justify-between items-start mb-6">
                 <h1 className="text-2xl font-bold">{email.subject}</h1>
-                <a 
+                <Link
                   href="/inbox"
+                  prefetch
                   className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-600"
                 >
                   Back to Inbox
-                </a>
+                </Link>
               </div>
               
               <div className="mb-6">
@@ -141,7 +142,6 @@ export default function Show({ email, latestReply, chatHistory = [], message, su
                     rows={3}
                     placeholder="e.g., 'Reply in a friendly tone' or 'Make it shorter'"
                     className="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-300 dark:focus:border-indigo-700 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-800 focus:ring-opacity-50"
-                    required
                   />
                 </div>
                 

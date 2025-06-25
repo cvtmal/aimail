@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\MailerServiceInterface;
+use App\Mail\EmailReplyMailable;
 use App\Models\EmailReply;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
-final readonly class MailerService
+final class MailerService implements MailerServiceInterface
 {
     /**
      * Send a reply to an email
@@ -32,12 +34,12 @@ final readonly class MailerService
         $subject = $this->formatReplySubject($email['subject']);
 
         try {
-            Mail::raw($replyContent, function ($message) use ($email, $subject) {
-                $message->to($email['from'])
-                    ->subject($subject)
-                    ->replyTo(config('mail.from.address'), config('mail.from.name'))
-                    ->references($email['message_id']);
-            });
+            Mail::to($email['from'])->send(new EmailReplyMailable(
+                replyContent: $replyContent,
+                emailSubject: $subject,
+                recipientEmail: $email['from'],
+                originalMessageId: $email['message_id']
+            ));
 
             // Store the reply in the database
             EmailReply::query()->create([

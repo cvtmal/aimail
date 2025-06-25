@@ -4,20 +4,27 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\AIClientInterface;
+use App\Models\EmailReply;
 use Exception;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 
-final readonly class AIClient
+final class AIClient implements AIClientInterface
 {
     private string $apiKey;
 
     private string $apiUrl;
 
-    public function __construct()
+    private Factory $http;
+
+    public function __construct(?Factory $http = null)
     {
-        $this->apiKey = config('services.ai.key');
-        $this->apiUrl = config('services.ai.url');
+        $this->apiKey = Config::get('services.ai.key');
+        $this->apiUrl = Config::get('services.ai.url');
+        $this->http = $http ?? Http::getFacadeRoot();
     }
 
     /**
@@ -42,19 +49,16 @@ final readonly class AIClient
      */
     public function generateReply(array $email, string $instruction, array $chatHistory = []): array
     {
-        // Prepare the system message that explains the AI's task
         $systemMessage = [
             'role' => 'system',
-            'content' => "You are an email assistant that helps the user craft replies. The user will provide you with an email to respond to and specific instructions on how to craft the reply. Generate a professional and appropriate response according to the user's instructions.",
+            'content' => "You are an email assistant that helps the user craft replies. The user will provide you with an email to respond to and specific instructions on how to craft the reply. Generate a professional and appropriate response according to the user's instructions. Respond in the language of the email we're replying to.",
         ];
 
-        // Prepare the initial message containing the email content
         $emailContextMessage = [
             'role' => 'user',
             'content' => "I need to reply to this email:\n\nFrom: {$email['from']}\nSubject: {$email['subject']}\nDate: {$email['date']}\n\n{$email['body']}",
         ];
 
-        // Prepare the instruction message
         $instructionMessage = [
             'role' => 'user',
             'content' => $instruction,
@@ -76,7 +80,7 @@ final readonly class AIClient
 
         // Call the AI API
         $response = $this->getClient()->post($this->apiUrl, [
-            'model' => 'gpt-4',
+            'model' => 'gpt-4o',
             'messages' => $messages,
             'temperature' => 0.7,
         ]);
@@ -116,7 +120,7 @@ final readonly class AIClient
     public function addToChatHistory(string $emailId, string $userInstruction, string $aiReply): bool
     {
         try {
-            $existingReply = \App\Models\EmailReply::firstOrNew(['email_id' => $emailId]);
+            $existingReply = EmailReply::firstOrNew(['email_id' => $emailId]);
 
             // Initialize chat history if it doesn't exist
             $chatHistory = $existingReply->chat_history ?? [];
@@ -162,7 +166,7 @@ final readonly class AIClient
      */
     private function getClient(): PendingRequest
     {
-        return Http::withHeaders([
+        return $this->http->withHeaders([
             'Authorization' => "Bearer {$this->apiKey}",
             'Content-Type' => 'application/json',
         ]);

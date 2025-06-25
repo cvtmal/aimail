@@ -1,5 +1,5 @@
 import React from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { formatDate } from '@/lib/utils';
@@ -16,11 +16,15 @@ interface InboxProps extends PageProps {
   emails: EmailListItem[];
 }
 
-export default function Index({ emails }: InboxProps) {
+export default function Index({ emails: rawEmails }: InboxProps) {
+  // Sort emails by date in descending order (newest first)
+  const emails = [...rawEmails].sort((a, b) => {
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  });
   return (
     <>
       <Head title="Inbox" />
-      
+
       <div className="py-12">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
           <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -49,19 +53,39 @@ export default function Index({ emails }: InboxProps) {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                       {emails.map((email) => (
-                        <tr 
-                          key={email.id} 
+                        <tr
+                          key={email.id}
                           className="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                          onClick={() => window.location.href = `/inbox/${email.id}`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                            {email.subject}
+                            <Link
+                              href={`/inbox/${email.id}`}
+                              prefetch
+                              className="block w-full"
+                              preserveScroll
+                            >
+                              {email.subject}
+                            </Link>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                            {email.from}
+                            <Link
+                              href={`/inbox/${email.id}`}
+                              prefetch
+                              className="block w-full"
+                              preserveScroll
+                            >
+                              {email.from}
+                            </Link>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                            {formatDate(email.date)}
+                            <Link
+                              href={`/inbox/${email.id}`}
+                              prefetch
+                              className="block w-full"
+                              preserveScroll
+                            >
+                              {formatDate(email.date)}
+                            </Link>
                           </td>
                         </tr>
                       ))}

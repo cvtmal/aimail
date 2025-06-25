@@ -2,35 +2,45 @@
 
 declare(strict_types=1);
 
+use App\Contracts\AIClientInterface;
+use App\Contracts\MailerServiceInterface;
 use App\Models\EmailReply;
 use App\Models\User;
-use App\Services\AIClient;
 use App\Services\ImapClient;
-use App\Services\MailerService;
 use App\Services\MockImapClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->user = User::factory()->create();
     $this->mockImapClient = new MockImapClient();
-    $this->mockAiClient = Mockery::mock(AIClient::class);
-    $this->mockMailerService = Mockery::mock(MailerService::class);
+    $this->mockAiClient = Mockery::mock(AIClientInterface::class);
+    $this->mockMailerService = Mockery::mock(MailerServiceInterface::class);
+
+    // We no longer force testing mode to return JSON
+    // Instead, we'll use Inertia's testing helpers
+
+    // Disable Vite for testing
+    $this->withoutVite();
 
     $this->app->instance(ImapClient::class, $this->mockImapClient);
-    $this->app->instance(AIClient::class, $this->mockAiClient);
-    $this->app->instance(MailerService::class, $this->mockMailerService);
+    $this->app->instance(AIClientInterface::class, $this->mockAiClient);
+    $this->app->instance(MailerServiceInterface::class, $this->mockMailerService);
 });
 
 test('inbox index displays emails', function () {
+    // Use Inertia's testing helpers
     $response = $this->actingAs($this->user)
         ->get('/inbox');
 
     $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page
+        ->assertInertia(fn (Assert $page) => $page
             ->component('Inbox/Index')
-            ->has('emails', 5)); // Our MockImapClient returns 5 emails
+            ->has('emails', 5) // Our MockImapClient returns 5 emails
+            ->has('usingMockData')
+        );
 });
 
 test('show email displays email details and possible existing reply', function () {
@@ -49,13 +59,14 @@ test('show email displays email details and possible existing reply', function (
         ->get('/inbox/email-001');
 
     $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page
+        ->assertInertia(fn (Assert $page) => $page
             ->component('Inbox/Show')
             ->has('email')
-            ->has('emailReply')
             ->where('email.id', 'email-001')
             ->where('email.subject', 'Project Update: Q3 Goals')
-            ->where('emailReply.latest_ai_reply', 'Previous AI reply content'));
+            ->where('latestReply', 'Previous AI reply content')
+            ->has('chatHistory')
+        );
 });
 
 test('show returns not found when email does not exist', function () {
@@ -63,7 +74,9 @@ test('show returns not found when email does not exist', function () {
         ->get('/inbox/non-existent-email');
 
     $response->assertStatus(200)
-        ->assertInertia(fn ($page) => $page->component('Inbox/NotFound'));
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Inbox/NotFound')
+        );
 });
 
 test('generate reply creates ai response and saves chat history', function () {
@@ -74,12 +87,24 @@ test('generate reply creates ai response and saves chat history', function () {
     // Setup mock response from AI client
     $this->mockAiClient->shouldReceive('generateReply')
         ->once()
-        ->andReturn($aiReplyText);
+        ->andReturn([
+            'reply' => $aiReplyText,
+            'chat_history' => [],
+        ]);
 
-    $this->mockAiClient->shouldReceive('addToChatHistory')
+    // Mock the mailer service to expect saveDraftReply
+    $emailReply = new EmailReply();
+    $emailReply->email_id = $emailId;
+    $emailReply->latest_ai_reply = $aiReplyText;
+    $emailReply->chat_history = [];
+
+    $this->mockMailerService->shouldReceive('saveDraftReply')
         ->once()
-        ->with($emailId, $instruction, $aiReplyText)
-        ->andReturn(true);
+        ->with($emailId, $aiReplyText, [])
+        ->andReturn($emailReply);
+
+    // We don't need to mock addToChatHistory since the controller doesn't call it directly
+    // The generateReply method should handle the chat history functionality internally
 
     $response = $this->actingAs($this->user)
         ->post("/inbox/{$emailId}/generate-reply", [
@@ -87,9 +112,12 @@ test('generate reply creates ai response and saves chat history', function () {
         ]);
 
     $response->assertStatus(200)
-        ->assertJson([
-            'reply' => $aiReplyText,
-        ]);
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Inbox/Show')
+            ->where('email.id', $emailId)
+            ->where('latestReply', $aiReplyText)
+            ->has('chatHistory')
+        );
 });
 
 test('send reply sends email via mailer service', function () {
@@ -114,8 +142,9 @@ test('send reply sends email via mailer service', function () {
             'reply' => $replyContent,
         ]);
 
-    $response->assertStatus(302)
-        ->assertRedirect('/inbox');
+    $response->assertStatus(302); // Expecting a redirect
+    $response->assertRedirect(route('inbox.index')); // Should redirect to inbox
+    $response->assertSessionHas('message', 'Reply sent successfully.');
 
     $this->assertDatabaseHas('email_replies', [
         'email_id' => $emailId,

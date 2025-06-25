@@ -82,12 +82,36 @@ final readonly class ImapClient
                     }
                 }
 
+                // Convert subject to string if it's an Attribute object
+                $subject = $message->getSubject();
+                if (is_object($subject) && method_exists($subject, 'toString')) {
+                    $subject = $subject->toString();
+                } elseif (is_object($subject)) {
+                    $subject = (string) $subject;
+                }
+                $subject = $subject ?: 'No Subject';
+
+                // Convert message_id to string if it's an Attribute object
+                $messageIdValue = $message->getMessageId();
+                if (is_object($messageIdValue) && method_exists($messageIdValue, 'toString')) {
+                    $messageIdValue = $messageIdValue->toString();
+                } elseif (is_object($messageIdValue)) {
+                    $messageIdValue = (string) $messageIdValue;
+                }
+
+                // Handle from address
+                $from = $message->getFrom();
+                $fromAddress = 'Unknown';
+                if ($from && ! empty($from) && isset($from[0]->mail)) {
+                    $fromAddress = $from[0]->mail;
+                }
+
                 return [
-                    'id' => $message->getUid(),
-                    'subject' => $message->getSubject() ?? 'No Subject',
-                    'from' => $message->getFrom()[0]->mail ?? 'Unknown',
+                    'id' => (string) $message->getUid(),
+                    'subject' => $subject,
+                    'from' => $fromAddress,
                     'date' => $dateString,
-                    'message_id' => $message->getMessageId(),
+                    'message_id' => $messageIdValue,
                 ];
             });
         } catch (Exception $e) {
