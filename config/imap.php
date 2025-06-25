@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /*
 * File:     imap.php
 * Category: config
@@ -47,10 +49,10 @@ return [
     'accounts' => [
 
         'default' => [// account identifier
-            'host'  => env('IMAP_HOST', 'localhost'),
-            'port'  => env('IMAP_PORT', 993),
-            'protocol'  => env('IMAP_PROTOCOL', 'imap'),
-            'encryption'    => env('IMAP_ENCRYPTION', 'ssl'),
+            'host' => env('IMAP_HOST', 'localhost'),
+            'port' => env('IMAP_PORT', 993),
+            'protocol' => env('IMAP_PROTOCOL', 'imap'),
+            'encryption' => env('IMAP_ENCRYPTION', 'ssl'),
             'validate_cert' => env('IMAP_VALIDATE_CERT', true),
             'username' => env('IMAP_USERNAME', 'user@example.com'),
             'password' => env('IMAP_PASSWORD', ''),
@@ -61,8 +63,8 @@ return [
                 'username' => null,
                 'password' => null,
             ],
-            "timeout" => 30,
-            "extensions" => []
+            'timeout' => 30,
+            'extensions' => [],
         ],
 
         /*
@@ -140,8 +142,8 @@ return [
     */
     'options' => [
         'delimiter' => '/',
-        'fetch' => \Webklex\PHPIMAP\IMAP::FT_PEEK,
-        'sequence' => \Webklex\PHPIMAP\IMAP::ST_UID,
+        'fetch' => Webklex\PHPIMAP\IMAP::FT_PEEK,
+        'sequence' => Webklex\PHPIMAP\IMAP::ST_UID,
         'fetch_body' => true,
         'fetch_flags' => true,
         'soft_fail' => false,
@@ -154,15 +156,15 @@ return [
         'fetch_order' => 'asc',
         'dispositions' => ['attachment', 'inline'],
         'common_folders' => [
-            "root" => "INBOX",
-            "junk" => "INBOX/Junk",
-            "draft" => "INBOX/Drafts",
-            "sent" => "INBOX/Sent",
-            "trash" => "INBOX/Trash",
+            'root' => 'INBOX',
+            'junk' => 'INBOX/Junk',
+            'draft' => 'INBOX/Drafts',
+            'sent' => 'INBOX/Sent',
+            'trash' => 'INBOX/Trash',
         ],
         'open' => [
             // 'DISABLE_AUTHENTICATOR' => 'GSSAPI'
-        ]
+        ],
     ],
 
     /**
@@ -183,13 +185,13 @@ return [
         'options' => [
             'header' => 'utf-8', // mimeheader
             'message' => 'utf-8', // mimeheader
-            'attachment' => 'utf-8' // mimeheader
+            'attachment' => 'utf-8', // mimeheader
         ],
         'decoder' => [
-            'header' => \Webklex\PHPIMAP\Decoder\HeaderDecoder::class,
-            'message' => \Webklex\PHPIMAP\Decoder\MessageDecoder::class,
-            'attachment' => \Webklex\PHPIMAP\Decoder\AttachmentDecoder::class
-        ]
+            'header' => Webklex\PHPIMAP\Decoder\HeaderDecoder::class,
+            'message' => Webklex\PHPIMAP\Decoder\MessageDecoder::class,
+            'attachment' => Webklex\PHPIMAP\Decoder\AttachmentDecoder::class,
+        ],
     ],
 
     /*
@@ -208,21 +210,21 @@ return [
     |
     */
     'events' => [
-        "message" => [
-            'new' => \Webklex\IMAP\Events\MessageNewEvent::class,
-            'moved' => \Webklex\IMAP\Events\MessageMovedEvent::class,
-            'copied' => \Webklex\IMAP\Events\MessageCopiedEvent::class,
-            'deleted' => \Webklex\IMAP\Events\MessageDeletedEvent::class,
-            'restored' => \Webklex\IMAP\Events\MessageRestoredEvent::class,
+        'message' => [
+            'new' => Webklex\IMAP\Events\MessageNewEvent::class,
+            'moved' => Webklex\IMAP\Events\MessageMovedEvent::class,
+            'copied' => Webklex\IMAP\Events\MessageCopiedEvent::class,
+            'deleted' => Webklex\IMAP\Events\MessageDeletedEvent::class,
+            'restored' => Webklex\IMAP\Events\MessageRestoredEvent::class,
         ],
-        "folder" => [
-            'new' => \Webklex\IMAP\Events\FolderNewEvent::class,
-            'moved' => \Webklex\IMAP\Events\FolderMovedEvent::class,
-            'deleted' => \Webklex\IMAP\Events\FolderDeletedEvent::class,
+        'folder' => [
+            'new' => Webklex\IMAP\Events\FolderNewEvent::class,
+            'moved' => Webklex\IMAP\Events\FolderMovedEvent::class,
+            'deleted' => Webklex\IMAP\Events\FolderDeletedEvent::class,
         ],
-        "flag" => [
-            'new' => \Webklex\IMAP\Events\FlagNewEvent::class,
-            'deleted' => \Webklex\IMAP\Events\FlagDeletedEvent::class,
+        'flag' => [
+            'new' => Webklex\IMAP\Events\FlagNewEvent::class,
+            'deleted' => Webklex\IMAP\Events\FlagDeletedEvent::class,
         ],
     ],
 
@@ -240,7 +242,7 @@ return [
     | The provided masks below are used as the default masks.
     */
     'masks' => [
-        'message' => \Webklex\PHPIMAP\Support\Masks\MessageMask::class,
-        'attachment' => \Webklex\PHPIMAP\Support\Masks\AttachmentMask::class
-    ]
+        'message' => Webklex\PHPIMAP\Support\Masks\MessageMask::class,
+        'attachment' => Webklex\PHPIMAP\Support\Masks\AttachmentMask::class,
+    ],
 ];

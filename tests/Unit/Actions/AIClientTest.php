@@ -23,10 +23,10 @@ test('generateReply makes correct API call', function () {
             'choices' => [
                 [
                     'message' => [
-                        'content' => 'This is a test AI reply.'
-                    ]
-                ]
-            ]
+                        'content' => 'This is a test AI reply.',
+                    ],
+                ],
+            ],
         ], 200),
     ]);
 
@@ -37,18 +37,18 @@ test('generateReply makes correct API call', function () {
         'body' => 'Test email content.',
         'date' => now(),
     ];
-    
+
     $userInstruction = 'Please reply professionally.';
 
     $reply = app(AIClient::class)->generateReply($email, $userInstruction);
-    
+
     expect($reply)->toBe('This is a test AI reply.');
-    
+
     Http::assertSent(function (Request $request) {
         $data = $request->data();
         $messages = $data['messages'] ?? [];
-        
-        return $request->url() == 'https://api.openai.com/v1/chat/completions' &&
+
+        return $request->url() === 'https://api.openai.com/v1/chat/completions' &&
             $request->hasHeader('Authorization', 'Bearer '.config('services.ai.key')) &&
             count($messages) >= 2 &&
             $messages[0]['role'] === 'system';
@@ -61,10 +61,10 @@ test('generateReply with chat history includes previous conversations', function
             'choices' => [
                 [
                     'message' => [
-                        'content' => 'This is a follow-up reply.'
-                    ]
-                ]
-            ]
+                        'content' => 'This is a follow-up reply.',
+                    ],
+                ],
+            ],
         ], 200),
     ]);
 
@@ -75,40 +75,40 @@ test('generateReply with chat history includes previous conversations', function
         'body' => 'Test email content.',
         'date' => now(),
     ];
-    
+
     $userInstruction = 'Make it more formal.';
-    
+
     $chatHistory = [
         [
             'role' => 'system',
-            'content' => 'You are an email assistant.'
+            'content' => 'You are an email assistant.',
         ],
         [
             'role' => 'user',
-            'content' => 'Please draft a reply.'
+            'content' => 'Please draft a reply.',
         ],
         [
             'role' => 'assistant',
-            'content' => 'Here is a draft reply.'
-        ]
+            'content' => 'Here is a draft reply.',
+        ],
     ];
 
     $emailReply = EmailReply::factory()->create([
         'email_id' => 'test-id',
         'chat_history' => $chatHistory,
-        'latest_ai_reply' => 'Here is a draft reply.'
+        'latest_ai_reply' => 'Here is a draft reply.',
     ]);
 
     $reply = app(AIClient::class)->generateReply($email, $userInstruction);
-    
+
     expect($reply)->toBe('This is a follow-up reply.');
-    
+
     Http::assertSent(function (Request $request) use ($userInstruction) {
         $data = $request->data();
         $messages = $data['messages'] ?? [];
         $lastMessage = end($messages);
-        
-        return $lastMessage['role'] === 'user' && 
+
+        return $lastMessage['role'] === 'user' &&
                $lastMessage['content'] === $userInstruction;
     });
 });
@@ -117,12 +117,12 @@ test('addToChatHistory properly formats and stores conversation history', functi
     $emailId = 'test-id';
     $userInstruction = 'Please be professional.';
     $aiReply = 'This is a professional response.';
-    
+
     $aiClient = app(AIClient::class);
     $aiClient->addToChatHistory($emailId, $userInstruction, $aiReply);
-    
+
     $emailReply = EmailReply::where('email_id', $emailId)->first();
-    
+
     expect($emailReply)->not->toBeNull();
     expect($emailReply->chat_history)->toHaveCount(3); // system + user + assistant
     expect($emailReply->chat_history[1]['role'])->toBe('user');

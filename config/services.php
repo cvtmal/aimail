@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
 
     /*
@@ -34,7 +36,7 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-    
+
     'ai' => [
         'url' => env('AI_API_URL', 'https://api.openai.com/v1/chat/completions'),
         'key' => env('AI_API_KEY'),

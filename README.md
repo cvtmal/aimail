@@ -24,7 +24,7 @@ An email assistant application that reads emails from an IMAP inbox, displays th
 1. **Clone the repository**
 
    ```bash
-   git clone [repository-url]
+   git clone https://github.com/cvtmal/aimail
    cd aimail
    ```
 
@@ -99,12 +99,8 @@ An email assistant application that reads emails from an IMAP inbox, displays th
 9. **Start the development server**
 
    ```bash
-   php artisan serve
+   composer run dev
    ```
-
-10. **Access the application**
-
-    Visit `http://localhost:8000/inbox` in your browser
 
 ## Development Notes
 

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Models\EmailReply;
 use Illuminate\Database\Seeder;
 
-class EmailReplySeeder extends Seeder
+final class EmailReplySeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -16,7 +18,7 @@ class EmailReplySeeder extends Seeder
         EmailReply::factory()
             ->count(10)
             ->create();
-            
+
         // Create a few email replies with specific email IDs for testing
         // These IDs match some of the mock emails we'll use in the mock IMAP service
         $testEmailIds = [
@@ -24,7 +26,7 @@ class EmailReplySeeder extends Seeder
             'email-002',
             'email-003',
         ];
-        
+
         foreach ($testEmailIds as $emailId) {
             EmailReply::factory()
                 ->create([

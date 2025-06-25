@@ -7,11 +7,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class EmailReply extends Model
+final class EmailReply extends Model
 {
     /** @use HasFactory<\Database\Factories\EmailReplyFactory> */
     use HasFactory;
-    
+
     /**
      * The attributes that should be cast.
      *
