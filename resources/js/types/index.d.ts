@@ -5,6 +5,12 @@ export interface Auth {
     user: User;
 }
 
+export interface PageProps {
+    auth: Auth;
+    errors: Record<string, string[]>;
+    [key: string]: unknown;
+}
+
 export interface BreadcrumbItem {
     title: string;
     href: string;

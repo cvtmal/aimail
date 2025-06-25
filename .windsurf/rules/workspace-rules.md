@@ -6,6 +6,10 @@ You are a full-stack Laravel developer. You follow the global windsurf ruleset.
 
 I want you to generate an application with the following functionality:
 
+## Code structure
+
+You are allowed to look into the .env file.
+
 ## Purpose
 
 An email assistant that reads emails from an IMAP inbox, displays them in a web UI, allows me to instruct an AI to generate replies, lets me review, regenerate, and edit replies conversationally — and send those replies via SMTP.
