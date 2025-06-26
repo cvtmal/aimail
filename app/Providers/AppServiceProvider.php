@@ -22,6 +22,7 @@ final class AppServiceProvider extends ServiceProvider
         // Bind interfaces to implementations
         $this->app->bind(\App\Contracts\AIClientInterface::class, \App\Services\AIClient::class);
         $this->app->bind(\App\Contracts\MailerServiceInterface::class, \App\Services\MailerService::class);
+        $this->app->bind(\App\Contracts\ImapClientInterface::class, \App\Services\ImapClient::class);
     }
 
     /**

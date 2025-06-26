@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\ImapClientInterface;
 use DateTimeImmutable;
 use Exception;
 use Illuminate\Support\Collection;
@@ -11,7 +12,7 @@ use Webklex\IMAP\Facades\Client;
 use Webklex\PHPIMAP\Client as ImapClientLib;
 use Webklex\PHPIMAP\Message;
 
-final readonly class ImapClient
+final readonly class ImapClient implements ImapClientInterface
 {
     /**
      * Connect to the IMAP server and get the client

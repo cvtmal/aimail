@@ -46,6 +46,8 @@ final class AIClient implements AIClientInterface
      *  reply: string,
      *  chat_history: array<int, array{role: string, content: string}>
      * }
+     *
+     * @throws Exception
      */
     public function generateReply(array $email, string $instruction, array $chatHistory = []): array
     {
