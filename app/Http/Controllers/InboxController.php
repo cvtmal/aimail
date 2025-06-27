@@ -34,9 +34,9 @@ final readonly class InboxController
 
     /**
      * Display a listing of the inbox emails.
-     * 
-     * @param Request $request The incoming request
-     * @param string|null $account The account identifier
+     *
+     * @param  Request  $request  The incoming request
+     * @param  string|null  $account  The account identifier
      */
     public function index(Request $request, ?string $account = null): Response
     {
@@ -46,7 +46,7 @@ final readonly class InboxController
 
             // Determine the account to use
             $accountId = $account ?? config('imap.default', 'default');
-            
+
             // Log configuration status
             $imap_host = config("imap.accounts.{$accountId}.host");
             $imap_username = config("imap.accounts.{$accountId}.username");
@@ -174,7 +174,7 @@ final readonly class InboxController
                 ->where('email_id', $id)
                 ->where(function ($query) use ($accountId) {
                     $query->where('account', $accountId)
-                          ->orWhereNull('account'); // For backward compatibility with existing replies
+                        ->orWhereNull('account'); // For backward compatibility with existing replies
                 })
                 ->first();
             $chatHistory = $reply?->chat_history ?? [];
@@ -199,10 +199,10 @@ final readonly class InboxController
 
     /**
      * Generate an AI reply for an email.
-     * 
-     * @param Request $request The incoming request
-     * @param string $id The ID of the email
-     * @param string|null $account The account identifier
+     *
+     * @param  Request  $request  The incoming request
+     * @param  string  $id  The ID of the email
+     * @param  string|null  $account  The account identifier
      */
     public function generateReply(Request $request, string $id, ?string $account = null): Response
     {
@@ -222,7 +222,7 @@ final readonly class InboxController
             ->where('email_id', $id)
             ->where(function ($query) use ($accountId) {
                 $query->where('account', $accountId)
-                      ->orWhereNull('account'); // For backward compatibility
+                    ->orWhereNull('account'); // For backward compatibility
             })
             ->first();
         $chatHistory = $reply?->chat_history ?? [];
@@ -244,10 +244,10 @@ final readonly class InboxController
     /**
      * Send an email reply.
      *
-     * @param Request $request The incoming request
-     * @param string $id The ID of the email
-     * @param string|null $account The account identifier
-     * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
+     * @param  Request  $request  The incoming request
+     * @param  string  $id  The ID of the email
+     * @param  string|null  $account  The account identifier
+     * @return Response|\Illuminate\Http\RedirectResponse
      */
     public function sendReply(Request $request, string $id, ?string $account = null)
     {
@@ -268,18 +268,19 @@ final readonly class InboxController
         );
 
         $success = $this->mailerService->sendReply($email, $validated['reply'], $accountId);
-        
+
         if ($success) {
             return to_route('inbox.index')
                 ->with('message', 'Reply sent successfully')
                 ->with('success', true);
-        } else {
-            return Inertia::render('Inbox/Show', [
-                'email' => $email,
-                'latestReply' => $validated['reply'],
-                'message' => 'Failed to send reply. Please try again.',
-                'success' => false,
-            ]);
         }
+
+        return Inertia::render('Inbox/Show', [
+            'email' => $email,
+            'latestReply' => $validated['reply'],
+            'message' => 'Failed to send reply. Please try again.',
+            'success' => false,
+        ]);
+
     }
 }

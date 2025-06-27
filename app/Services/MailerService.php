@@ -34,11 +34,12 @@ final class MailerService implements MailerServiceInterface
     {
         $subject = $this->formatReplySubject($email['subject']);
         $accountId = $account ?? config('mail.default');
+        $mailerKey = $this->resolveMailerKey((string) $accountId);
 
         try {
-            // Configure mail for specific account if provided
-            $mailer = Mail::mailer($accountId);
-            
+            // Configure mailer for this account
+            $mailer = Mail::mailer($mailerKey);
+
             $mailer->to($email['from'])->send(new EmailReplyMailable(
                 replyContent: $replyContent,
                 emailSubject: $subject,
@@ -80,7 +81,7 @@ final class MailerService implements MailerServiceInterface
     public function saveDraftReply(string $emailId, string $replyContent, array $chatHistory, ?string $account = null): EmailReply
     {
         $accountId = $account ?? config('mail.default');
-        
+
         return EmailReply::query()->updateOrCreate(
             ['email_id' => $emailId],
             [
@@ -90,6 +91,23 @@ final class MailerService implements MailerServiceInterface
                 // sent_at remains null for drafts
             ]
         );
+    }
+
+    /**
+     * Resolve the Laravel mailer key for a given logical account identifier.
+     *
+     * This maps friendly account names used elsewhere in the code (e.g. "info",
+     * "damian", or the default account id) to the mailer keys that are
+     * configured in config/mail.php (e.g. "smtp1", "smtp2", etc.). If no
+     * mapping exists we fall back to the primary "smtp" mailer.
+     */
+    private function resolveMailerKey(string $accountId): string
+    {
+        return match ($accountId) {
+            'info' => 'smtp1',
+            'damian' => 'smtp2',
+            default => 'smtp',
+        };
     }
 
     /**

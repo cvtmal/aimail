@@ -8,10 +8,9 @@ use App\Mail\EmailReplyMailable;
 use App\Models\EmailReply;
 use App\Services\MailerService;
 use Illuminate\Support\Facades\Mail;
-use Mockery;
 use Tests\TestCase;
 
-class MailerServiceTest extends TestCase
+final class MailerServiceTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -19,7 +18,7 @@ class MailerServiceTest extends TestCase
         Mail::fake();
     }
 
-    public function testSendReplyWithDefaultAccount(): void
+    public function test_send_reply_with_default_account(): void
     {
         // Create an email reply record
         $emailReply = EmailReply::factory()->make([
@@ -30,7 +29,7 @@ class MailerServiceTest extends TestCase
         ]);
 
         $mailerService = new MailerService();
-        
+
         // Test parameters
         $to = 'recipient@example.com';
         $subject = 'RE: Test Email';
@@ -38,19 +37,19 @@ class MailerServiceTest extends TestCase
         $originalEmailId = '123';
         $html = '<p>Test reply content</p>';
         $chatHistory = [['role' => 'assistant', 'content' => 'Test reply content']];
-        
+
         // Send the reply
         $mailerService->sendReply($to, $subject, $aiReply, $originalEmailId, $chatHistory, $html);
-        
+
         // Assert that the email was sent with default mailer
         Mail::assertSent(EmailReplyMailable::class, function ($mail) use ($to, $subject, $aiReply, $html) {
-            return $mail->hasTo($to) && 
-                   $mail->subject === $subject && 
+            return $mail->hasTo($to) &&
+                   $mail->subject === $subject &&
                    $mail->content === $aiReply &&
                    $mail->html === $html &&
                    $mail->account === null; // Default account
         });
-        
+
         // Assert that an EmailReply record was saved with sent_at not null
         $this->assertDatabaseHas('email_replies', [
             'email_id' => '123',
@@ -58,8 +57,8 @@ class MailerServiceTest extends TestCase
             'latest_ai_reply' => 'Test reply content',
         ]);
     }
-    
-    public function testSendReplyWithSpecificAccount(): void
+
+    public function test_send_reply_with_specific_account(): void
     {
         // Create an email reply record
         $emailReply = EmailReply::factory()->make([
@@ -69,9 +68,9 @@ class MailerServiceTest extends TestCase
             'chat_history' => [['role' => 'assistant', 'content' => 'Work reply content']],
             'sent_at' => null,
         ]);
-        
+
         $mailerService = new MailerService();
-        
+
         // Test parameters
         $to = 'colleague@work.com';
         $subject = 'RE: Work Email';
@@ -80,19 +79,19 @@ class MailerServiceTest extends TestCase
         $html = '<p>Work reply content</p>';
         $account = 'smtp1';
         $chatHistory = [['role' => 'assistant', 'content' => 'Work reply content']];
-        
+
         // Send the reply with work account
         $mailerService->sendReply($to, $subject, $aiReply, $originalEmailId, $chatHistory, $html, $account);
-        
+
         // Assert that the email was sent with work mailer
         Mail::assertSent(EmailReplyMailable::class, function ($mail) use ($to, $subject, $aiReply, $html, $account) {
-            return $mail->hasTo($to) && 
-                   $mail->subject === $subject && 
+            return $mail->hasTo($to) &&
+                   $mail->subject === $subject &&
                    $mail->content === $aiReply &&
                    $mail->html === $html &&
                    $mail->account === $account;
         });
-        
+
         // Assert that an EmailReply record was saved with correct account
         $this->assertDatabaseHas('email_replies', [
             'email_id' => '456',
@@ -100,18 +99,18 @@ class MailerServiceTest extends TestCase
             'latest_ai_reply' => 'Work reply content',
         ]);
     }
-    
-    public function testSaveDraftReplyWithDifferentAccounts(): void
+
+    public function test_save_draft_reply_with_different_accounts(): void
     {
         $mailerService = new MailerService();
-        
+
         // Test with default account
         $mailerService->saveDraftReply(
             'Default draft content',
             '123',
             [['role' => 'assistant', 'content' => 'Default draft content']]
         );
-        
+
         // Assert default account draft was saved
         $this->assertDatabaseHas('email_replies', [
             'email_id' => '123',
@@ -119,7 +118,7 @@ class MailerServiceTest extends TestCase
             'latest_ai_reply' => 'Default draft content',
             'sent_at' => null,
         ]);
-        
+
         // Test with personal account
         $mailerService->saveDraftReply(
             'Personal draft content',
@@ -127,7 +126,7 @@ class MailerServiceTest extends TestCase
             [['role' => 'assistant', 'content' => 'Personal draft content']],
             'smtp2'
         );
-        
+
         // Assert personal account draft was saved
         $this->assertDatabaseHas('email_replies', [
             'email_id' => '789',

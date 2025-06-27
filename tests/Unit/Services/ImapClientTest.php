@@ -5,17 +5,15 @@ declare(strict_types=1);
 namespace Tests\Unit\Services;
 
 use App\Services\ImapClient;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Log;
 use Mockery;
 use Tests\TestCase;
 use Webklex\IMAP\Facades\Client;
 use Webklex\PHPIMAP\Client as ImapClientLib;
 use Webklex\PHPIMAP\Support\MessageCollection;
 
-class ImapClientTest extends TestCase
+final class ImapClientTest extends TestCase
 {
-    public function testGetInboxEmailsWithDefaultAccount(): void
+    public function test_get_inbox_emails_with_default_account(): void
     {
         // Mock the IMAP client, folder, and query
         $mockClient = Mockery::mock(ImapClientLib::class);
@@ -28,12 +26,12 @@ class ImapClientTest extends TestCase
         Client::shouldReceive('account')->with('default')->once()->andReturn($mockClient);
         $mockClient->shouldReceive('connect')->once()->andReturnSelf();
         $mockClient->shouldReceive('getFolder')->with('INBOX')->once()->andReturn($mockFolder);
-        
+
         // Mock query chain
         $mockFolder->shouldReceive('query')->once()->andReturn($mockQuery);
         $mockQuery->shouldReceive('all')->once()->andReturnSelf();
         $mockQuery->shouldReceive('get')->once()->andReturn($mockMessageCollection);
-        
+
         // Mock collection behavior
         $mockMessageCollection->shouldReceive('isEmpty')->andReturn(false);
         $mockMessageCollection->shouldReceive('count')->andReturn(1);
@@ -58,7 +56,7 @@ class ImapClientTest extends TestCase
         $this->assertEquals('Test Subject', $emails[0]['subject']);
     }
 
-    public function testGetInboxEmailsWithSpecificAccount(): void
+    public function test_get_inbox_emails_with_specific_account(): void
     {
         // Mock the IMAP client, folder, and query
         $mockClient = Mockery::mock(ImapClientLib::class);
@@ -71,12 +69,12 @@ class ImapClientTest extends TestCase
         Client::shouldReceive('account')->with('smtp1')->once()->andReturn($mockClient);
         $mockClient->shouldReceive('connect')->once()->andReturnSelf();
         $mockClient->shouldReceive('getFolder')->with('INBOX')->once()->andReturn($mockFolder);
-        
+
         // Mock query chain
         $mockFolder->shouldReceive('query')->once()->andReturn($mockQuery);
         $mockQuery->shouldReceive('all')->once()->andReturnSelf();
         $mockQuery->shouldReceive('get')->once()->andReturn($mockMessageCollection);
-        
+
         // Mock collection behavior
         $mockMessageCollection->shouldReceive('isEmpty')->andReturn(false);
         $mockMessageCollection->shouldReceive('count')->andReturn(1);
@@ -101,7 +99,7 @@ class ImapClientTest extends TestCase
         $this->assertEquals('Work Email Subject', $emails[0]['subject']);
     }
 
-    public function testGetEmailWithSpecificAccount(): void
+    public function test_get_email_with_specific_account(): void
     {
         // Mock the IMAP client, folder, and query
         $mockClient = Mockery::mock(ImapClientLib::class);
@@ -114,14 +112,14 @@ class ImapClientTest extends TestCase
         Client::shouldReceive('account')->with('smtp2')->once()->andReturn($mockClient);
         $mockClient->shouldReceive('connect')->once()->andReturnSelf();
         $mockClient->shouldReceive('getFolder')->with('INBOX')->once()->andReturn($mockFolder);
-        
+
         // Mock messages query chain
         $mockFolder->shouldReceive('messages')->once()->andReturn($mockMessageQuery);
         $mockMessageQuery->shouldReceive('setFetchBody')->with(true)->once()->andReturnSelf();
         $mockMessageQuery->shouldReceive('setFetchFlags')->with(true)->once()->andReturnSelf();
         $mockMessageQuery->shouldReceive('uid')->with('789')->once()->andReturnSelf();
         $mockMessageQuery->shouldReceive('get')->once()->andReturn($mockMessageCollection);
-        
+
         // Mock collection behavior
         $mockMessageCollection->shouldReceive('count')->andReturn(1);
         $mockMessageCollection->shouldReceive('first')->andReturn($mockMessage);

@@ -68,21 +68,21 @@ return [
         ],
 
         'info' => [
-            'host'          => env('IMAP_INFO_HOST', 'mail.cyon.ch'),
-            'port'          => env('IMAP_INFO_PORT', 993),
-            'encryption'    => env('IMAP_INFO_ENCRYPTION', 'ssl'),
+            'host' => env('IMAP_INFO_HOST', 'mail.cyon.ch'),
+            'port' => env('IMAP_INFO_PORT', 993),
+            'encryption' => env('IMAP_INFO_ENCRYPTION', 'ssl'),
             'validate_cert' => env('IMAP_INFO_VALIDATE_CERT', true),
-            'username'      => env('IMAP_INFO_USERNAME', 'info@myitjob.ch'),
-            'password'      => env('IMAP_INFO_PASSWORD'),
+            'username' => env('IMAP_INFO_USERNAME', 'info@myitjob.ch'),
+            'password' => env('IMAP_INFO_PASSWORD'),
         ],
 
         'damian' => [
-            'host'          => env('IMAP_DAMIAN_HOST', 'mail.cyon.ch'),
-            'port'          => env('IMAP_DAMIAN_PORT', 993),
-            'encryption'    => env('IMAP_DAMIAN_ENCRYPTION', 'ssl'),
+            'host' => env('IMAP_DAMIAN_HOST', 'mail.cyon.ch'),
+            'port' => env('IMAP_DAMIAN_PORT', 993),
+            'encryption' => env('IMAP_DAMIAN_ENCRYPTION', 'ssl'),
             'validate_cert' => env('IMAP_DAMIAN_VALIDATE_CERT', true),
-            'username'      => env('IMAP_DAMIAN_USERNAME', 'damian.ermanni@myitjob.ch'),
-            'password'      => env('IMAP_DAMIAN_PASSWORD'),
+            'username' => env('IMAP_DAMIAN_USERNAME', 'damian.ermanni@myitjob.ch'),
+            'password' => env('IMAP_DAMIAN_PASSWORD'),
             // Memory optimization options
             'options' => [
                 'fetch_order' => 'desc', // Newest messages first

@@ -17,15 +17,15 @@ final readonly class ImapClient implements ImapClientInterface
     /**
      * Connect to the IMAP server and get the client
      *
-     * @param string|null $account The account identifier
-     * @return ImapClientLib
+     * @param  string|null  $account  The account identifier
+     *
      * @throws Exception
      */
     public function getClient(?string $account = null): ImapClientLib
     {
         try {
             $accountId = $account ?? config('imap.default', 'default');
-            
+
             logger()->info('Getting IMAP client with config', [
                 'account' => $accountId,
                 'host' => config("imap.accounts.{$accountId}.host"),
@@ -48,7 +48,7 @@ final readonly class ImapClient implements ImapClientInterface
     /**
      * Get all emails from the inbox
      *
-     * @param string|null $account The account identifier
+     * @param  string|null  $account  The account identifier
      * @return Collection<int, array{
      *  id: string,
      *  subject: string,
@@ -70,28 +70,28 @@ final readonly class ImapClient implements ImapClientInterface
 
             logger()->info('Getting INBOX folder');
             $folder = $client->getFolder('INBOX');
-            
+
             // Get account-specific options
             $options = config("imap.accounts.{$accountId}.options", []);
             $limit = $options['limit'] ?? 100;
             $fetchOrder = $options['fetch_order'] ?? 'desc'; // Default to newest first
-            
+
             logger()->info('Setting up memory-optimized IMAP query', [
                 'account' => $accountId,
                 'limit' => $limit,
-                'order' => $fetchOrder
+                'order' => $fetchOrder,
             ]);
-            
+
             try {
                 // Create a memory-optimized query
                 $query = $folder->query();
-                
+
                 // Don't fetch message bodies to save memory
                 $query->setFetchBody(false);
-                
+
                 // Don't mark messages as read when fetching them
                 $query->leaveUnread();
-                      
+
                 if ($fetchOrder === 'desc') {
                     // Sort by date descending (newest first)
                     $query->setFetchOrderDesc();
@@ -99,41 +99,42 @@ final readonly class ImapClient implements ImapClientInterface
                     // Sort by date ascending (oldest first)
                     $query->setFetchOrderAsc();
                 }
-                
+
                 logger()->info('Executing memory-optimized IMAP query');
-                
+
                 // Fetch only limited number of messages
                 $messages = $query->all()->limit($limit)->get();
-                
+
                 if ($messages->isEmpty()) {
                     // Fallback approach if no messages found
                     logger()->warning('Optimized query returned no results, trying alternative approach');
-                    
+
                     // Create a simpler query directly from the folder
                     $messages = $folder->messages()
                         ->setFetchBody(false) // Don't fetch message bodies
                         ->leaveUnread()       // Don't mark as read
                         ->limit($limit)       // Limit results
                         ->get();              // Get messages
-                    
-                    logger()->info('Alternative approach retrieved ' . $messages->count() . ' messages');
+
+                    logger()->info('Alternative approach retrieved '.$messages->count().' messages');
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // If we encounter any error, log it and return an empty collection
                 logger()->error('Error processing IMAP query', [
                     'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
+                    'trace' => $e->getTraceAsString(),
                 ]);
-                
+
                 return collect([]);
             }
-            
-            logger()->info('Retrieved ' . ($messages->count()) . ' messages from INBOX', [
-                'account' => $accountId
+
+            logger()->info('Retrieved '.($messages->count()).' messages from INBOX', [
+                'account' => $accountId,
             ]);
 
             if ($messages->isEmpty()) {
                 logger()->warning('No messages found in INBOX');
+
                 return collect([]);
             }
 
@@ -184,12 +185,12 @@ final readonly class ImapClient implements ImapClientInterface
                         'date' => $dateString,
                         'message_id' => $messageIdValue,
                     ];
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     logger()->error('Error processing message in getInboxEmails', [
                         'error' => $e->getMessage(),
-                        'uid' => $message->getUid() ?? 'unknown'
+                        'uid' => $message->getUid() ?? 'unknown',
                     ]);
-                    
+
                     // Return a minimal record for emails we can't process
                     return [
                         'id' => (string) ($message->getUid() ?? 'error'),
@@ -205,6 +206,7 @@ final readonly class ImapClient implements ImapClientInterface
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return collect([]);
         }
     }
@@ -230,11 +232,11 @@ final readonly class ImapClient implements ImapClientInterface
         try {
             $accountId = $account ?? config('imap.default', 'default');
             logger()->info('Attempting to retrieve email with ID: '.$messageId, ['account' => $accountId]);
-            
+
             // Normalize the message ID to ensure it's a valid UID string
-            $normalizedId = trim((string)$messageId);
+            $normalizedId = mb_trim((string) $messageId);
             logger()->info('Normalized message ID: '.$normalizedId);
-            
+
             $client = $this->getClient($accountId);
             logger()->info('Connecting to IMAP server for email retrieval');
             $client->connect();
@@ -248,7 +250,7 @@ final readonly class ImapClient implements ImapClientInterface
             try {
                 // First attempt - get message directly by UID using the proper API method
                 $message = null;
-                
+
                 // Check if we can get available message IDs first
                 try {
                     // Get a sample of messages to check their UIDs
@@ -256,55 +258,55 @@ final readonly class ImapClient implements ImapClientInterface
                         ->setFetchBody(false)
                         ->limit(3)
                         ->get();
-                    
+
                     if ($messages && count($messages) > 0) {
                         $sampleUids = [];
                         foreach ($messages as $msg) {
-                            $sampleUids[] = (string)$msg->getUid();
+                            $sampleUids[] = (string) $msg->getUid();
                         }
                         logger()->info('Sample UIDs from mailbox', [
                             'sample_uids' => $sampleUids,
-                            'account' => $accountId
+                            'account' => $accountId,
                         ]);
                     }
                 } catch (Exception $e) {
-                    logger()->warning('Error checking sample UIDs: ' . $e->getMessage());
+                    logger()->warning('Error checking sample UIDs: '.$e->getMessage());
                 }
-                
+
                 logger()->info('Using getMessageByUid to fetch single email');
                 try {
                     // According to php-imap.com docs, this is the proper way to fetch by UID
                     $query = $folder->query();
                     $message = $query->getMessageByUid($normalizedId);
                 } catch (Exception $queryError) {
-                    logger()->warning('Error in getMessageByUid: ' . $queryError->getMessage(), [
+                    logger()->warning('Error in getMessageByUid: '.$queryError->getMessage(), [
                         'account' => $accountId,
-                        'uid' => $normalizedId
+                        'uid' => $normalizedId,
                     ]);
                     $message = null;
                 }
-                
+
                 // If direct fetch failed, try searching messages
-                if (!$message) {
+                if (! $message) {
                     logger()->info('UID fetch with getMessageByUid failed, trying all() method', ['account' => $accountId]);
                     try {
                         // Try with all() first as it's syntactically correct
                         $messages = $folder->query()->all()->get();
-                        
+
                         // Find the message with matching UID
                         foreach ($messages as $msg) {
-                            $uid = (string)$msg->getUid();
+                            $uid = (string) $msg->getUid();
                             if ($uid === $normalizedId) {
                                 $message = $msg;
                                 logger()->info('Found message with matching UID', [
                                     'uid' => $uid,
-                                    'account' => $accountId
-                                ]);  
+                                    'account' => $accountId,
+                                ]);
                                 break;
                             }
                         }
                     } catch (Exception $queryError) {
-                        logger()->warning('Error in messages all() fetch: ' . $queryError->getMessage(), ['account' => $accountId]);
+                        logger()->warning('Error in messages all() fetch: '.$queryError->getMessage(), ['account' => $accountId]);
                     }
                 }
 
@@ -317,33 +319,33 @@ final readonly class ImapClient implements ImapClientInterface
                             ->setFetchBody(true)  // We need the body for individual email view
                             ->limit(100)          // Increase limit to improve chances of finding the email
                             ->get();
-                            
-                        logger()->info('Got ' . count($allMessages) . ' messages for manual filtering', ['account' => $accountId]);
-                        
+
+                        logger()->info('Got '.count($allMessages).' messages for manual filtering', ['account' => $accountId]);
+
                         // Manually search through messages to find the one with matching UID
                         foreach ($allMessages as $msg) {
-                            $uid = (string)$msg->getUid();
+                            $uid = (string) $msg->getUid();
                             if ($uid === $normalizedId) {
-                                logger()->info('Found exact match for message ID: ' . $normalizedId, ['account' => $accountId]);
+                                logger()->info('Found exact match for message ID: '.$normalizedId, ['account' => $accountId]);
                                 $message = $msg;
                                 break;
                             }
                         }
-                        
+
                         // If still not found, try using a numerical search as a last resort
-                        if (!$message && is_numeric($normalizedId)) {
+                        if (! $message && is_numeric($normalizedId)) {
                             logger()->info('Trying numerical search as last resort', ['account' => $accountId]);
                             foreach ($allMessages as $index => $msg) {
                                 // Try matching by index position in the folder
-                                if ((string)($index + 1) === $normalizedId) {
-                                    logger()->info('Found message by numerical index: ' . $normalizedId, ['account' => $accountId]);
+                                if ((string) ($index + 1) === $normalizedId) {
+                                    logger()->info('Found message by numerical index: '.$normalizedId, ['account' => $accountId]);
                                     $message = $msg;
                                     break;
                                 }
                             }
                         }
                     } catch (Exception $fallbackError) {
-                        logger()->error('Error in fallback email retrieval: ' . $fallbackError->getMessage(), ['account' => $accountId]);
+                        logger()->error('Error in fallback email retrieval: '.$fallbackError->getMessage(), ['account' => $accountId]);
                     }
                 }
             } catch (Exception $e) {
