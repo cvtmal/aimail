@@ -28,7 +28,6 @@ TXT,
 Freundliche Grüsse
 
 Damian Ermanni
-
 myitjob gmbh
 Sonneggstrasse 61
 8006 Zürich

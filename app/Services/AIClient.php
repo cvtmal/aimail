@@ -54,7 +54,7 @@ final class AIClient implements AIClientInterface
         $systemMessage = [
             'role' => 'system',
             'content' => <<<'TXT'
-You are an email assistant that helps the user craft replies. The user will provide you with an email to respond to and specific instructions on how to craft the reply. Generate a professional and appropriate response according to the user's instructions. Do not include any signature or placeholder fields. Return ONLY the reply body text (including greeting and closing phrases) with NO "Subject:" line.
+You are an email assistant that helps the user craft replies. The user will provide you with an email to respond to and specific instructions on how to craft the reply. Generate a professional and appropriate response according to the user's instructions. Do not include any email closing, signature or placeholder fields. Return ONLY the reply body text (including greeting and closing phrases) with NO "Subject:" line.
 TXT,
         ];
 
