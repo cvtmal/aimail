@@ -17,11 +17,13 @@ use Inertia\Response;
 final readonly class InboxController
 {
     private AIClientInterface $aiClient;
+
     private MailerServiceInterface $mailerService;
+
     private ImapClientInterface $imapClient;
 
     public function __construct(
-        AIClientInterface $aiClient, 
+        AIClientInterface $aiClient,
         MailerServiceInterface $mailerService,
         ImapClientInterface $imapClient
     ) {
@@ -32,26 +34,33 @@ final readonly class InboxController
 
     /**
      * Display a listing of the inbox emails.
+     * 
+     * @param Request $request The incoming request
+     * @param string|null $account The account identifier
      */
-    public function index(): Response
+    public function index(Request $request, ?string $account = null): Response
     {
         try {
             /** @var object|Collection<int, array{id: string, subject: string, from: string, to: string, date: \Carbon\Carbon, body: string, html: ?string, message_id: string}> $emails */
             $this->imapClient->getInboxEmails();
 
+            // Determine the account to use
+            $accountId = $account ?? config('imap.default', 'default');
+            
             // Log configuration status
-            $imap_host = config('imap.accounts.default.host');
-            $imap_username = config('imap.accounts.default.username');
+            $imap_host = config("imap.accounts.{$accountId}.host");
+            $imap_username = config("imap.accounts.{$accountId}.username");
 
             logger()->info('IMAP Config Check', [
                 'host' => $imap_host,
                 'username' => $imap_username,
+                'account' => $accountId,
                 'client_class' => get_class($this->imapClient),
             ]);
 
             // Get emails with detailed logging
-            logger()->info('Attempting to retrieve emails from IMAP server');
-            $emails = $this->imapClient->getInboxEmails();
+            logger()->info('Attempting to retrieve emails from IMAP server', ['account' => $accountId]);
+            $emails = $this->imapClient->getInboxEmails($accountId);
 
             // Log the emails that were retrieved
             logger()->info('Retrieved '.($emails instanceof Collection ? $emails->count() : count($emails)).' emails', [
@@ -129,13 +138,18 @@ final readonly class InboxController
 
     /**
      * Display the specified email.
+     *
+     * @param  Request  $request  The incoming request
+     * @param  string  $id  The ID of the email to show
+     * @param  string|null  $account  The account identifier
      */
-    public function show(Request $request, string $id): Response
+    public function show(Request $request, string $id, ?string $account = null): Response
     {
-        logger()->info('Show email requested for ID: '.$id);
+        $accountId = $account ?? config('imap.default', 'default');
+        logger()->info('Show email requested for ID: '.$id, ['account' => $accountId]);
 
         try {
-            $email = $this->imapClient->getEmail($id);
+            $email = $this->imapClient->getEmail($id, $accountId);
 
             if (! $email) {
                 logger()->warning('Email not found with ID: '.$id);
@@ -155,8 +169,14 @@ final readonly class InboxController
                 }
             }
 
-            // Get any existing reply for this email
-            $reply = EmailReply::query()->where('email_id', $id)->first();
+            // Get any existing reply for this email and account
+            $reply = EmailReply::query()
+                ->where('email_id', $id)
+                ->where(function ($query) use ($accountId) {
+                    $query->where('account', $accountId)
+                          ->orWhereNull('account'); // For backward compatibility with existing replies
+                })
+                ->first();
             $chatHistory = $reply?->chat_history ?? [];
 
             return Inertia::render('Inbox/Show', [
@@ -179,28 +199,39 @@ final readonly class InboxController
 
     /**
      * Generate an AI reply for an email.
+     * 
+     * @param Request $request The incoming request
+     * @param string $id The ID of the email
+     * @param string|null $account The account identifier
      */
-    public function generateReply(Request $request, string $id): Response
+    public function generateReply(Request $request, string $id, ?string $account = null): Response
     {
         $validated = $request->validate([
             'instruction' => ['required', 'string'],
         ]);
 
-        $email = $this->imapClient->getEmail($id);
+        $accountId = $account ?? config('imap.default', 'default');
+        $email = $this->imapClient->getEmail($id, $accountId);
 
         if (! $email) {
             return Inertia::render('Inbox/NotFound');
         }
 
-        // Get any existing chat history
-        $reply = EmailReply::query()->where('email_id', $id)->first();
+        // Get any existing chat history for this email and account
+        $reply = EmailReply::query()
+            ->where('email_id', $id)
+            ->where(function ($query) use ($accountId) {
+                $query->where('account', $accountId)
+                      ->orWhereNull('account'); // For backward compatibility
+            })
+            ->first();
         $chatHistory = $reply?->chat_history ?? [];
 
         // Generate reply using AI
         $result = $this->aiClient->generateReply($email, $validated['instruction'], $chatHistory);
 
-        // Save the reply and chat history
-        $this->mailerService->saveDraftReply($id, $result['reply'], $result['chat_history']);
+        // Save the reply and chat history with account information
+        $this->mailerService->saveDraftReply($id, $result['reply'], $result['chat_history'], $accountId);
 
         return Inertia::render('Inbox/Show', [
             'email' => $email,
@@ -212,34 +243,43 @@ final readonly class InboxController
 
     /**
      * Send an email reply.
+     *
+     * @param Request $request The incoming request
+     * @param string $id The ID of the email
+     * @param string|null $account The account identifier
+     * @return \Inertia\Response|\Illuminate\Http\RedirectResponse
      */
-    public function sendReply(Request $request, string $id): Response
+    public function sendReply(Request $request, string $id, ?string $account = null)
     {
         $validated = $request->validate([
             'reply' => ['required', 'string'],
         ]);
 
-        $email = $this->imapClient->getEmail($id);
+        $accountId = $account ?? config('imap.default', 'default');
+        $email = $this->imapClient->getEmail($id, $accountId);
 
         if (! $email) {
             return Inertia::render('Inbox/NotFound');
         }
 
         EmailReply::updateOrCreate(
-            ['email_id' => $id],
+            ['email_id' => $id, 'account' => $accountId],
             ['latest_ai_reply' => $validated['reply'], 'sent_at' => now()]
         );
 
-        return $this->mailerService->sendReply($email, $validated['reply'])
-            ? Inertia::render('Inbox/Index', [
-                'message' => 'Reply sent successfully',
-                'success' => true,
-            ])
-            : Inertia::render('Inbox/Show', [
+        $success = $this->mailerService->sendReply($email, $validated['reply'], $accountId);
+        
+        if ($success) {
+            return to_route('inbox.index')
+                ->with('message', 'Reply sent successfully')
+                ->with('success', true);
+        } else {
+            return Inertia::render('Inbox/Show', [
                 'email' => $email,
                 'latestReply' => $validated['reply'],
                 'message' => 'Failed to send reply. Please try again.',
                 'success' => false,
             ]);
+        }
     }
 }

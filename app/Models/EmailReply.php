@@ -21,4 +21,17 @@ final class EmailReply extends Model
         'chat_history' => 'json',
         'sent_at' => 'datetime',
     ];
+    
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'email_id',
+        'account',
+        'latest_ai_reply',
+        'chat_history',
+        'sent_at',
+    ];
 }

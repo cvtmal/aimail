@@ -53,7 +53,7 @@ final class AIClient implements AIClientInterface
     {
         $systemMessage = [
             'role' => 'system',
-            'content' => "You are an email assistant that helps the user craft replies. The user will provide you with an email to respond to and specific instructions on how to craft the reply. Generate a professional and appropriate response according to the user's instructions. Respond in the language of the email we're replying to.",
+            'content' => "You are an email assistant that helps the user craft replies. The user will provide you with an email to respond to and specific instructions on how to craft the reply. Generate a professional and appropriate response according to the user's instructions.",
         ];
 
         $emailContextMessage = [

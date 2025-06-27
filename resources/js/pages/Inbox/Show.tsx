@@ -3,6 +3,8 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { formatDate } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Loader2, Send } from 'lucide-react';
 
 interface Email {
   id: string;
@@ -95,13 +97,14 @@ export default function Show({ email, latestReply, chatHistory = [], message, su
             <div className="p-6 text-gray-900 dark:text-gray-100">
               <div className="flex justify-between items-start mb-6">
                 <h1 className="text-2xl font-bold">{email.subject}</h1>
-                <Link
-                  href="/inbox"
-                  prefetch
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm font-medium hover:bg-gray-300 dark:hover:bg-gray-600"
-                >
-                  Back to Inbox
-                </Link>
+                <Button variant="outline" asChild>
+                  <Link
+                    href="/inbox"
+                    prefetch
+                  >
+                    Back to Inbox
+                  </Link>
+                </Button>
               </div>
               
               <div className="mb-6">
@@ -146,22 +149,24 @@ export default function Show({ email, latestReply, chatHistory = [], message, su
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <button
+                  <Button
                     type="submit"
                     disabled={isGenerating}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="default"
                   >
+                    {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isGenerating ? 'Generating...' : 'Generate AI Reply'}
-                  </button>
+                  </Button>
                   
                   {chatHistory.length > 0 && (
-                    <button
+                    <Button
                       type="button"
                       onClick={() => setShowChatHistory(!showChatHistory)}
-                      className="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                      variant="ghost"
+                      size="sm"
                     >
                       {showChatHistory ? 'Hide Chat History' : 'Show Chat History'}
-                    </button>
+                    </Button>
                   )}
                 </div>
               </form>
@@ -211,13 +216,23 @@ export default function Show({ email, latestReply, chatHistory = [], message, su
                   </div>
                   
                   <div>
-                    <button
+                    <Button
                       type="submit"
                       disabled={isSending}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      variant="default"
                     >
-                      {isSending ? 'Sending...' : 'Send Reply'}
-                    </button>
+                      {isSending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          Send
+                          <Send className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </form>
               </div>

@@ -13,9 +13,22 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
+];
+
+const inboxNavItems: NavItem[] = [
     {
-        title: 'Inbox',
+        title: 'lucasmbaldauf@myitjob.ch',
         href: '/inbox',
+        icon: Mail,
+    },
+    {
+        title: 'info@myitjob.ch',
+        href: '/accounts/info',
+        icon: Mail,
+    },
+    {
+        title: 'damian.ermanni@myitjob.ch',
+        href: '/accounts/damian',
         icon: Mail,
     },
 ];
@@ -50,6 +63,10 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                <div className="mt-6">
+                    <h2 className="px-4 mb-2 text-xs font-semibold text-gray-500 uppercase">Inboxes</h2>
+                    <NavMain items={inboxNavItems} />
+                </div>
             </SidebarContent>
 
             <SidebarFooter>

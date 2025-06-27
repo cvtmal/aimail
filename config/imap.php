@@ -48,7 +48,7 @@ return [
     */
     'accounts' => [
 
-        'default' => [// account identifier
+        'default' => [
             'host' => env('IMAP_HOST', 'localhost'),
             'port' => env('IMAP_PORT', 993),
             'protocol' => env('IMAP_PROTOCOL', 'imap'),
@@ -65,6 +65,31 @@ return [
             ],
             'timeout' => 30,
             'extensions' => [],
+        ],
+
+        'info' => [
+            'host'          => env('IMAP_INFO_HOST', 'mail.cyon.ch'),
+            'port'          => env('IMAP_INFO_PORT', 993),
+            'encryption'    => env('IMAP_INFO_ENCRYPTION', 'ssl'),
+            'validate_cert' => env('IMAP_INFO_VALIDATE_CERT', true),
+            'username'      => env('IMAP_INFO_USERNAME', 'info@myitjob.ch'),
+            'password'      => env('IMAP_INFO_PASSWORD'),
+        ],
+
+        'damian' => [
+            'host'          => env('IMAP_DAMIAN_HOST', 'mail.cyon.ch'),
+            'port'          => env('IMAP_DAMIAN_PORT', 993),
+            'encryption'    => env('IMAP_DAMIAN_ENCRYPTION', 'ssl'),
+            'validate_cert' => env('IMAP_DAMIAN_VALIDATE_CERT', true),
+            'username'      => env('IMAP_DAMIAN_USERNAME', 'damian.ermanni@myitjob.ch'),
+            'password'      => env('IMAP_DAMIAN_PASSWORD'),
+            // Memory optimization options
+            'options' => [
+                'fetch_order' => 'desc', // Newest messages first
+                'limit' => env('IMAP_DAMIAN_MESSAGE_LIMIT', 50), // Limit to recent messages
+                'fetch_body' => false, // Don't fetch body in initial listing
+                'soft_fail' => true, // Continue on errors
+            ],
         ],
 
         /*

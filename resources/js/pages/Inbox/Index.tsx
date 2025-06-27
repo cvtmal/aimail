@@ -14,19 +14,26 @@ interface EmailListItem {
 
 interface InboxProps extends PageProps {
   emails: EmailListItem[];
+  message?: string;
+  success?: boolean;
 }
 
-export default function Index({ emails: rawEmails }: InboxProps) {
-  // Sort emails by date in descending order (newest first)
-  const emails = [...rawEmails].sort((a, b) => {
+export default function Index({ emails: rawEmails, message, success }: InboxProps) {
+  // Handle the case when emails might be undefined or null
+  const emails = rawEmails ? [...rawEmails].sort((a, b) => {
     return new Date(b.date).getTime() - new Date(a.date).getTime();
-  });
+  }) : [];
   return (
     <>
       <Head title="Inbox" />
 
       <div className="py-12">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+          {message && (
+            <div className={`mb-4 p-4 rounded-md ${success !== false ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              {message}
+            </div>
+          )}
           <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div className="p-6 text-gray-900 dark:text-gray-100">
               <h1 className="text-2xl font-bold mb-6">Inbox</h1>

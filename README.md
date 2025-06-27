@@ -8,6 +8,7 @@ An email assistant application that reads emails from an IMAP inbox, displays th
 - **AI-Powered Replies**: Use AI to generate contextual email replies
 - **Conversational Context**: Continue refining AI responses with natural language instructions
 - **SMTP Integration**: Send replies directly via SMTP
+- **Multi-Account Support**: Use multiple email accounts with the application
 - **Modern UI**: Clean interface built with Laravel 12, Inertia.js, and React
 
 ## Tech Stack
@@ -57,13 +58,34 @@ An email assistant application that reads emails from an IMAP inbox, displays th
      IMAP_PASSWORD=your-password
      ```
 
-   - SMTP settings:
+   - SMTP settings (for multiple accounts):
      ```
+     # Default account
      SMTP_HOST=smtp.example.com
      SMTP_PORT=587
      SMTP_USERNAME=your-username
      SMTP_PASSWORD=your-password
      SMTP_ENCRYPTION=tls
+     MAIL_FROM_ADDRESS=default@example.com
+     MAIL_FROM_NAME="Default Account"
+     
+     # Additional account 1
+     SMTP1_MAIL_HOST=smtp1.example.com
+     SMTP1_MAIL_PORT=587
+     SMTP1_MAIL_USERNAME=username1
+     SMTP1_MAIL_PASSWORD=password1
+     SMTP1_MAIL_ENCRYPTION=tls
+     SMTP1_MAIL_FROM_ADDRESS=account1@example.com
+     SMTP1_MAIL_FROM_NAME="Account 1"
+     
+     # Additional account 2
+     SMTP2_MAIL_HOST=smtp2.example.com
+     SMTP2_MAIL_PORT=587
+     SMTP2_MAIL_USERNAME=username2
+     SMTP2_MAIL_PASSWORD=password2
+     SMTP2_MAIL_ENCRYPTION=tls
+     SMTP2_MAIL_FROM_ADDRESS=account2@example.com
+     SMTP2_MAIL_FROM_NAME="Account 2"
      ```
 
    - AI API settings:
@@ -107,6 +129,38 @@ An email assistant application that reads emails from an IMAP inbox, displays th
 - For local development without an actual IMAP connection, the app will use a mock IMAP client that provides sample emails
 - The `.env` configuration determines whether to use the real or mock IMAP client
 - Tests are written using Pest PHP
+
+## Multi-Account Support
+
+### Configuration
+
+1. **IMAP Accounts**
+
+   Multiple IMAP accounts are configured in `config/imap.php`. Each account needs its own set of credentials.
+
+2. **SMTP Accounts**
+
+   Multiple SMTP accounts are defined in `config/mail.php` under the 'mailers' array:
+   - `smtp` (default account)
+   - `smtp1` (additional account 1)
+   - `smtp2` (additional account 2)
+
+### Usage in Backend
+
+The system supports account-specific operations throughout the application. All key services accept an optional account identifier:
+
+```php
+// Using the default account
+$emails = $imapClient->getInboxEmails();
+
+// Using a specific account
+$emails = $imapClient->getInboxEmails('smtp1');
+$mailerService->sendReply($reply, $emailId, $chatHistory, 'smtp2');
+```
+
+### Database Schema
+
+The `email_replies` table includes an `account` column that stores which account each email reply belongs to, enabling proper filtering and organization.
 
 ## Testing
 

@@ -50,6 +50,42 @@ return [
             'password' => env('MAIL_PASSWORD', env('SMTP_PASSWORD')),
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            'from' => [
+                'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+                'name' => env('MAIL_FROM_NAME', 'Example'),
+            ],
+        ],
+        
+        'smtp1' => [
+            'transport' => 'smtp',
+            'scheme' => env('SMTP1_MAIL_SCHEME', 'tls'),
+            'host' => env('SMTP1_MAIL_HOST', '127.0.0.1'),
+            'port' => (int) env('SMTP1_MAIL_PORT', 587),
+            'encryption' => env('SMTP1_MAIL_ENCRYPTION', 'tls'),
+            'username' => env('SMTP1_MAIL_USERNAME'),
+            'password' => env('SMTP1_MAIL_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('SMTP1_MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            'from' => [
+                'address' => env('SMTP1_MAIL_FROM_ADDRESS', 'account1@example.com'),
+                'name' => env('SMTP1_MAIL_FROM_NAME', 'Account 1'),
+            ],
+        ],
+        
+        'smtp2' => [
+            'transport' => 'smtp',
+            'scheme' => env('SMTP2_MAIL_SCHEME', 'tls'),
+            'host' => env('SMTP2_MAIL_HOST', '127.0.0.1'),
+            'port' => (int) env('SMTP2_MAIL_PORT', 587),
+            'encryption' => env('SMTP2_MAIL_ENCRYPTION', 'tls'),
+            'username' => env('SMTP2_MAIL_USERNAME'),
+            'password' => env('SMTP2_MAIL_PASSWORD'),
+            'timeout' => null,
+            'local_domain' => env('SMTP2_MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+            'from' => [
+                'address' => env('SMTP2_MAIL_FROM_ADDRESS', 'account2@example.com'),
+                'name' => env('SMTP2_MAIL_FROM_NAME', 'Account 2'),
+            ],
         ],
 
         'ses' => [

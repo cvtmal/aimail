@@ -11,15 +11,15 @@ interface ImapClientInterface
     /**
      * Get emails from the inbox.
      *
-     * @return Collection|array
+     * @param string|null $account The account identifier, default is used if null
      */
-    public function getInboxEmails(): Collection|array;
+    public function getInboxEmails(?string $account = null): Collection|array;
 
     /**
      * Get a specific email by ID.
      *
-     * @param string $id
-     * @return array|null
+     * @param string $id The email ID
+     * @param string|null $account The account identifier, default is used if null
      */
-    public function getEmail(string $id): ?array;
+    public function getEmail(string $id, ?string $account = null): ?array;
 }
