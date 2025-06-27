@@ -47,7 +47,7 @@ final class EmailReplyMailable extends Mailable
         return $this
             ->to($this->recipientEmail)
             ->replyTo($fromAddress, $fromName)
-            ->text('emails.reply-plain', ['content' => $this->replyContent])
+            ->view('emails.reply-html', ['content' => $this->replyContent])
             ->withSymfonyMessage(function ($message) {
                 $message->getHeaders()
                     ->addTextHeader('References', $this->originalMessageId)

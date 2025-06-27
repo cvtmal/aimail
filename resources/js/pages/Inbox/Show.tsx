@@ -26,11 +26,12 @@ interface ShowProps extends PageProps {
   email: Email;
   latestReply?: string;
   chatHistory?: ChatMessage[];
+  signature?: string;
   message?: string;
   success?: boolean;
 }
 
-export default function Show({ email, latestReply, chatHistory = [], message, success }: ShowProps) {
+export default function Show({ email, latestReply, chatHistory = [], signature = '', message, success }: ShowProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [showChatHistory, setShowChatHistory] = useState(false);
@@ -41,6 +42,7 @@ export default function Show({ email, latestReply, chatHistory = [], message, su
 
   const { data: replyData, setData: setReplyData, post: replyPost } = useForm({
     reply: latestReply || '',
+    signature: signature || '',
   });
 
   const handleGenerateReply = (e: FormEvent) => {
@@ -215,6 +217,17 @@ export default function Show({ email, latestReply, chatHistory = [], message, su
                     />
                   </div>
                   
+                  {/* Signature textarea */}
+                  <div className="mb-4">
+                    <label htmlFor="signature" className="block text-sm font-medium mb-1">Signature</label>
+                    <textarea
+                      id="signature"
+                      value={replyData.signature}
+                      onChange={(e) => setReplyData('signature', e.target.value)}
+                      rows={6}
+                      className="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-300 dark:focus:border-indigo-700 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-800 focus:ring-opacity-50"
+                    />
+                  </div>
                   <div>
                     <Button
                       type="submit"

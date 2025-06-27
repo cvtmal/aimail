@@ -40,7 +40,8 @@ final class ImapEngineInboxController extends Controller
     public function show(Request $request, string $id): Response
     {
         $account = $request->query('account');
-        $email = $this->imapClient->getEmail($id, $account);
+        $accountId = $account ?? config('imapengine.default', 'default');
+        $email = $this->imapClient->getEmail($id, $accountId);
 
         if (! $email) {
             return Inertia::render('ImapEngineInbox/Show', [
@@ -53,8 +54,8 @@ final class ImapEngineInboxController extends Controller
         // Load existing draft / history
         $reply = EmailReply::query()
             ->where('email_id', $id)
-            ->where(function ($q) use ($account) {
-                $q->where('account', $account)->orWhereNull('account');
+            ->where(function ($q) use ($accountId) {
+                $q->where('account', $accountId)->orWhereNull('account');
             })
             ->first();
 
@@ -62,7 +63,8 @@ final class ImapEngineInboxController extends Controller
             'email' => $email,
             'latestReply' => $reply?->latest_ai_reply,
             'chatHistory' => $reply?->chat_history ?? [],
-            'account' => $account ?? 'default',
+            'signature' => config('signatures.'.$accountId) ?? config('signatures.default'),
+            'account' => $accountId,
         ]);
     }
 
@@ -104,6 +106,7 @@ final class ImapEngineInboxController extends Controller
             'email' => $email,
             'latestReply' => $result['reply'],
             'chatHistory' => $result['chat_history'],
+            'signature' => config('signatures.'.$accountId) ?? config('signatures.default'),
             'message' => 'Reply generated successfully.',
             'success' => true,
             'account' => $accountId,
@@ -117,6 +120,7 @@ final class ImapEngineInboxController extends Controller
     {
         $validated = $request->validate([
             'reply' => ['required', 'string'],
+            'signature' => ['nullable', 'string'],
         ]);
 
         $account = $request->query('account');
@@ -132,12 +136,18 @@ final class ImapEngineInboxController extends Controller
             ]);
         }
 
+        $signature = mb_trim($validated['signature'] ?? '');
+        $combined = mb_trim($validated['reply']);
+        if ($signature !== '') {
+            $combined .= "\n\n".$signature;
+        }
+
         EmailReply::updateOrCreate(
             ['email_id' => $id, 'account' => $accountId],
-            ['latest_ai_reply' => $validated['reply'], 'sent_at' => now()]
+            ['latest_ai_reply' => $combined, 'sent_at' => now()]
         );
 
-        $sent = $this->mailerService->sendReply($email, $validated['reply'], $accountId);
+        $sent = $this->mailerService->sendReply($email, $combined, $accountId);
 
         if ($sent) {
             return to_route('imapengine.inbox.index', ['account' => $accountId])
@@ -148,6 +158,7 @@ final class ImapEngineInboxController extends Controller
         return Inertia::render('ImapEngineInbox/Show', [
             'email' => $email,
             'latestReply' => $validated['reply'],
+            'signature' => config('signatures.'.$accountId) ?? config('signatures.default'),
             'message' => 'Failed to send reply. Please try again.',
             'success' => false,
             'account' => $accountId,

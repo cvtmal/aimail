@@ -36,24 +36,24 @@ final class MailerService implements MailerServiceInterface
         $accountId = $account ?? config('mail.default');
         $mailerKey = $this->resolveMailerKey((string) $accountId);
 
+        // Convert combined plain text (reply + optional signature) to safe HTML
+        $replyHtml = nl2br(e(mb_rtrim($replyContent)));
+
         try {
-            // Configure mailer for this account
             $mailer = Mail::mailer($mailerKey);
 
             $mailer->to($email['from'])->send(new EmailReplyMailable(
-                replyContent: $replyContent,
+                replyContent: $replyHtml,
                 emailSubject: $subject,
                 recipientEmail: $email['from'],
                 originalMessageId: $email['message_id'],
                 account: $accountId
             ));
 
-            // Store the reply in the database with the account identifier
             EmailReply::query()->create([
                 'email_id' => $email['id'],
                 'latest_ai_reply' => $replyContent,
                 'sent_at' => now(),
-                // Chat history will be passed separately if needed
                 'chat_history' => [],
                 'account' => $accountId,
             ]);
@@ -108,6 +108,30 @@ final class MailerService implements MailerServiceInterface
             'damian' => 'smtp2',
             default => 'smtp',
         };
+    }
+
+    /**
+     * Append the account-specific signature to the reply content if missing.
+     *
+     * @param  string  $replyContent  The AI-generated reply without signature
+     * @param  string  $accountId  The logical account identifier (e.g. "info", "damian")
+     * @return string Reply content with signature appended (if not already present)
+     */
+    private function appendSignature(string $replyContent, string $accountId): string
+    {
+        $signature = config('signatures.'.$accountId) ?? config('signatures.default', '');
+        $signature = mb_trim($signature);
+
+        // Convert the plain-text reply to HTML (escape + nl2br)
+        $replyHtml = nl2br(e(mb_rtrim($replyContent)));
+
+        // Avoid appending if signature already present
+        if ($signature === '' || str_contains($replyHtml, $signature)) {
+            return $replyHtml;
+        }
+
+        // Separate reply and signature with a <br><br>
+        return $replyHtml.'<br><br>'.$signature;
     }
 
     /**

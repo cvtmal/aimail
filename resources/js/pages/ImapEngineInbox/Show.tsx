@@ -26,12 +26,13 @@ interface EmailShowProps extends PageProps {
   email: EmailDetails;
   latestReply?: string;
   chatHistory?: ChatMessage[];
+  signature?: string;
   message?: string;
   success?: boolean;
   account: string;
 }
 
-export default function Show({ email, latestReply, chatHistory = [], message, success, account }: EmailShowProps) {
+export default function Show({ email, latestReply, chatHistory = [], signature = '', message, success, account }: EmailShowProps) {
   // When email is not found
   if (!email) {
     return (
@@ -77,6 +78,7 @@ export default function Show({ email, latestReply, chatHistory = [], message, su
 
   const { data: replyData, setData: setReplyData, post: replyPost } = useForm({
     reply: latestReply || '',
+    signature: signature || '',
   });
 
   const handleGenerateReply = (e: FormEvent) => {
@@ -204,11 +206,10 @@ export default function Show({ email, latestReply, chatHistory = [], message, su
                     {chatHistory.map((msg, idx) => (
                       <div
                         key={idx}
-                        className={`p-3 rounded-lg ${
-                          msg.role === 'user'
+                        className={`p-3 rounded-lg ${msg.role === 'user'
                             ? 'bg-gray-100 dark:bg-gray-700 ml-8'
                             : 'bg-indigo-50 dark:bg-indigo-900 mr-8'
-                        }`}
+                          }`}
                       >
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                           {msg.role === 'user' ? 'You' : 'AI Assistant'}
@@ -236,6 +237,17 @@ export default function Show({ email, latestReply, chatHistory = [], message, su
                     className="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-300 dark:focus:border-indigo-700 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-800 focus:ring-opacity-50"
                     required
                   />
+                  {/* Signature textarea */}
+                  <div className="mb-4">
+                    <label htmlFor="signature" className="block text-sm font-medium mb-1">Signature</label>
+                    <textarea
+                      id="signature"
+                      value={replyData.signature}
+                      onChange={(e) => setReplyData('signature', e.target.value)}
+                      rows={6}
+                      className="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-300 dark:focus:border-indigo-700 focus:ring focus:ring-indigo-200 dark:focus:ring-indigo-800 focus:ring-opacity-50"
+                    />
+                  </div>
                   <Button type="submit" disabled={isSending} variant="default">
                     {isSending ? (
                       <>
@@ -257,94 +269,6 @@ export default function Show({ email, latestReply, chatHistory = [], message, su
     </>
   );
 }
-
-    /* Duplicate legacy code below retained for reference but excluded from compilation
-    return (
-      <AppLayout children={
-        <>
-          <Head title="Email Not Found" />
-
-          <div className="py-12">
-            <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-              <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div className="p-6 text-gray-900 dark:text-gray-100">
-                  <p>The requested email could not be found.</p>
-                  <div className="mt-4">
-                    <Link
-                      href={`/imapengine-inbox?account=${account}`}
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      Back to Inbox
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      } breadcrumbs={[
-        { title: 'ImapEngine Inbox', href: `/imapengine-inbox?account=${account}` },
-        { title: 'Email Not Found', href: '#' },
-      ]} />
-    );
-  }
-
-  return (
-    <AppLayout children={
-      <>
-        <Head title={`${email.subject} - ImapEngine Email`} />
-
-        <div className="py-12">
-          <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-              <div className="p-6 text-gray-900 dark:text-gray-100">
-                <div className="mb-4">
-                  <Link
-                    href={`/imapengine-inbox?account=${account}`}
-                    className="text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    ← Back to Inbox
-                  </Link>
-                </div>
-
-                <div>
-                  <div className="mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">
-                    <h1 className="text-2xl font-bold mb-2">{email.subject}</h1>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <div>
-                        <strong>From:</strong> {email.from}
-                      </div>
-                      <div>
-                        <strong>To:</strong> {email.to}
-                      </div>
-                      <div>
-                        <strong>Date:</strong> {formatDate(email.date)}
-                      </div>
-                      <div>
-                        <strong>Message ID:</strong> {email.message_id}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4">
-                    {email.html ? (
-                      <div dangerouslySetInnerHTML={{ __html: email.html ?? '' }} />
-                    ) : (
-                      <pre className="whitespace-pre-wrap font-sans">{email.body}</pre>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
-    } breadcrumbs={[
-      { title: 'ImapEngine Inbox', href: `/imapengine-inbox?account=${account}` },
-      { title: email.subject || 'Email Details', href: '#' },
-    ]} />
-  );
-*/
 
 Show.layout = (page: React.ReactNode) => (
   <AppLayout

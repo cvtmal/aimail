@@ -182,6 +182,7 @@ final readonly class InboxController
             return Inertia::render('Inbox/Show', [
                 'email' => $email,
                 'latestReply' => $reply?->latest_ai_reply,
+                'signature' => config('signatures.'.$accountId) ?? config('signatures.default'),
                 'chatHistory' => $chatHistory,
             ]);
         } catch (Exception $e) {
@@ -237,6 +238,7 @@ final readonly class InboxController
             'email' => $email,
             'latestReply' => $result['reply'],
             'chatHistory' => $result['chat_history'],
+            'signature' => config('signatures.'.$accountId) ?? config('signatures.default'),
             'message' => 'Reply generated successfully.',
         ]);
     }
@@ -253,6 +255,7 @@ final readonly class InboxController
     {
         $validated = $request->validate([
             'reply' => ['required', 'string'],
+            'signature' => ['nullable', 'string'],
         ]);
 
         $accountId = $account ?? config('imap.default', 'default');
@@ -262,12 +265,18 @@ final readonly class InboxController
             return Inertia::render('Inbox/NotFound');
         }
 
+        $signature = mb_trim($validated['signature'] ?? '');
+        $combined = mb_trim($validated['reply']);
+        if ($signature !== '') {
+            $combined .= "\n\n".$signature;
+        }
+
         EmailReply::updateOrCreate(
             ['email_id' => $id, 'account' => $accountId],
-            ['latest_ai_reply' => $validated['reply'], 'sent_at' => now()]
+            ['latest_ai_reply' => $combined, 'sent_at' => now()]
         );
 
-        $success = $this->mailerService->sendReply($email, $validated['reply'], $accountId);
+        $success = $this->mailerService->sendReply($email, $combined, $accountId);
 
         if ($success) {
             return to_route('inbox.index')
