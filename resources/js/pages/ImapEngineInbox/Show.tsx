@@ -1,5 +1,5 @@
 import React, { useState, FormEvent } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 import { PageProps } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { formatDate } from '@/lib/utils';
@@ -110,6 +110,30 @@ export default function Show({ email, latestReply, chatHistory = [], signature =
     });
   };
 
+  // Quick generate and append helpers
+  const quickGenerate = (instruction: string) => {
+    setIsGenerating(true);
+    router.post(
+      `/imapengine-inbox/${email.id}/generate-reply?account=${account}`,
+      { instruction },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          setIsGenerating(false);
+          setGenerateData('instruction', '');
+        },
+        onError: () => {
+          setIsGenerating(false);
+        },
+      },
+    );
+  };
+
+  const appendInstruction = (text: string) => {
+    const newInstruction = generateData.instruction ? `${generateData.instruction} ${text}` : text;
+    setGenerateData('instruction', newInstruction);
+  };
+
   // Keep reply textarea synced with latestReply prop
   React.useEffect(() => {
     if (latestReply) {
@@ -179,6 +203,21 @@ export default function Show({ email, latestReply, chatHistory = [], signature =
                   placeholder="e.g. Answer in a friendly tone"
                   required
                 />
+                {/* Quick action buttons */}
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => quickGenerate('answer')}>
+                    Answer
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => quickGenerate('make it shorter')}>
+                    Make it shorter
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => appendInstruction('Antworte in Du-Form')}>
+                    Duzis
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => appendInstruction('Antworte in Sie-Form')}>
+                    Sie-Form
+                  </Button>
+                </div>
                 <div className="flex items-center justify-between">
                   <Button type="submit" disabled={isGenerating} variant="default">
                     {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
