@@ -36,13 +36,10 @@ final class EmailReplyMailable extends Mailable
      */
     public function build(): self
     {
-        $fromAddress = $this->account ?
-            config("mail.mailers.{$this->account}.from.address", config('mail.from.address')) :
-            config('mail.from.address');
-
-        $fromName = $this->account ?
-            config("mail.mailers.{$this->account}.from.name", config('mail.from.name')) :
-            config('mail.from.name');
+        $mailerKey = $this->resolveMailerKey($this->account ?? 'default');
+        
+        $fromAddress = config("mail.mailers.{$mailerKey}.from.address", config('mail.from.address'));
+        $fromName = config("mail.mailers.{$mailerKey}.from.name", config('mail.from.name'));
 
         return $this
             ->to($this->recipientEmail)
@@ -53,5 +50,17 @@ final class EmailReplyMailable extends Mailable
                     ->addTextHeader('References', $this->originalMessageId)
                     ->addTextHeader('In-Reply-To', $this->originalMessageId);
             });
+    }
+
+    /**
+     * Resolve the Laravel mailer key for a given logical account identifier.
+     */
+    private function resolveMailerKey(string $accountId): string
+    {
+        return match ($accountId) {
+            'info' => 'smtp1',
+            'damian' => 'smtp2',
+            default => 'smtp',
+        };
     }
 }

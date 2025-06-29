@@ -33,7 +33,7 @@ final class MailerService implements MailerServiceInterface
     public function sendReply(array $email, string $replyContent, ?string $account = null): bool
     {
         $subject = $this->formatReplySubject($email['subject']);
-        $accountId = $account ?? config('mail.default');
+        $accountId = $account ?? 'default';
         $mailerKey = $this->resolveMailerKey((string) $accountId);
 
         // Convert combined plain text (reply + optional signature) to safe HTML
@@ -80,7 +80,7 @@ final class MailerService implements MailerServiceInterface
      */
     public function saveDraftReply(string $emailId, string $replyContent, array $chatHistory, ?string $account = null): EmailReply
     {
-        $accountId = $account ?? config('mail.default');
+        $accountId = $account ?? 'default';
 
         return EmailReply::query()->updateOrCreate(
             ['email_id' => $emailId],
