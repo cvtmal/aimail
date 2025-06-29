@@ -211,10 +211,10 @@ export default function Show({ email, latestReply, chatHistory = [], signature =
                   <Button type="button" variant="ghost" size="sm" onClick={() => quickGenerate('make it shorter')}>
                     Make it shorter
                   </Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => appendInstruction('Antworte in Du-Form')}>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => appendInstruction('Antworte in Du-Form. ')}>
                     Duzis
                   </Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => appendInstruction('Antworte in Sie-Form')}>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => appendInstruction('Antworte in Sie-Form. ')}>
                     Sie-Form
                   </Button>
                 </div>
